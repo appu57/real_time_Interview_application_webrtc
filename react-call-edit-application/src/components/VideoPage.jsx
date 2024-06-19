@@ -67,6 +67,9 @@ const VideoPage = () => {
         const offer = await PeerService.getOffer();
         socket.emit('negotiation', { to: remoteSocket, offer: offer });
     }, [remoteSocket, socket])
+    const leaveMeeting=()=>{
+
+    }
     useEffect(() => {
         PeerService.peer.addEventListener('track', async (e) => {
             const remoteStream = e.streams;
@@ -100,21 +103,24 @@ const VideoPage = () => {
     }, [socket, joinRoom, receiveAnswer, negotiationNeeded, negotiationCompleted, receiveOffer,showUserMedia])
     return (
         <div className="video__page__container">
-            <div className="stream__container mx-10">
+            <div className="stream__container" style={{height:"45%"}}>
                 {
                     streams &&
-                        (<ReactPlayer playing className="stream" height="50%" width="100%"  url={streams} />)
+                        (<ReactPlayer playing className="stream" height="100%" width="100%"  url={streams} />)
                 }
             </div>
 
-            <div className="remoteStream__container">
+            <div className="remoteStream__container " style={{height:"45%"}}>
 
                 {
-                    remoteStreams && (<ReactPlayer playing className="rstream" height="50%" width="100%" url={remoteStreams} />)
+                    remoteStreams && (<ReactPlayer playing className="rstream" height="100%" width="100%" url={remoteStreams} />)
                     // :(<img src={CameraDisabled} alt="Camera disabled" width="50%" height="400px"/>)
 
                 }
 
+            </div>
+            <div className="button__container">
+                <button className="btn btn_leave_meeting" onClick={leaveMeeting}>Leave Meeting</button>
             </div>
         </div>
     )

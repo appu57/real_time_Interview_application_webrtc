@@ -1,23 +1,25 @@
-import React , {createContext, useContext, useEffect, useState} from 'react';
-import {io} from 'socket.io-client'
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { io } from 'socket.io-client'
 const SocketContext = createContext();
-export const useSocket = ()=>{
+export const useSocket = () => {
     const socket = useContext(SocketContext);
     return socket;
 
 }
 
-const SocketContextProvider = ({children})=>{
-    const [socket,setSocket]=useState(null);
-    useEffect(()=>{
-      const socketConn = io('http://localhost:3000',{transports:['websocket','polling','flashsocket']});
-      setSocket(socketConn);
-      return ()=>{
-          socketConn.close();
-          console.log('Socket connection is closed');
-      }
-    },[])
-    return(
+const SocketContextProvider = ({ children }) => {
+    const [socket, setSocket] = useState(null);
+    useEffect(() => {
+        if (socket == null) {
+            const socketConn = io('http://localhost:3000', { transports: ['websocket', 'polling', 'flashsocket'] });
+            setSocket(socketConn);
+            return () => {
+                socketConn.close();
+                console.log('Socket connection is closed');
+            }
+        }
+    }, [])
+    return (
         <SocketContext.Provider value={socket}>
             {children}
         </SocketContext.Provider>

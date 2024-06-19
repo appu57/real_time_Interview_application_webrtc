@@ -15,8 +15,7 @@ function App() {
       <SocketContextProvider>
         <Routes>
           <Route path="/" Component={LoginPage} />
-          <Route path="home" Component={HomePage} />
-
+          <Route path="home"  Component={HomePage} />
         </Routes>
       </SocketContextProvider>
     </BrowserRouter>
