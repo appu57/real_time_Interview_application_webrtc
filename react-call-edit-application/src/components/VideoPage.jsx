@@ -3,48 +3,120 @@ import { useSocket } from '../contexts/SocketContext';
 import { useContext, useEffect, useState, useCallback } from 'react';
 import ReactPlayer from 'react-player';
 import PeerService from '../services/PeerService';
-const VideoPage = () =>{
+const VideoPage = () => {
     const socket = useSocket();
-    const joinRoom=(e)=>{
+    const [remoteSocket, setRemoteSocket] = useState(null);
+    const [remoteStreams, setRemoteStreams] = useState(null);
+    const [streams, setStreams] = useState(null);
+    const joinRoom = (e) => {
+        console.log(e);
+        sendOffer(e.userId);
+    }
+    const showUserMedia = useCallback(async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        setStreams(stream);
+    }, [socket,streams]);
 
-    }
-    const sendOffer=(e)=>{
+    const sendOffer =useCallback (async(to) => {
+        setRemoteSocket(to);
+        const offer = await PeerService.getOffer();
+        socket.emit('send_offer', { to: to, offer: offer });
+    },[socket,streams]);
 
-    }
-    const receiveAnswer=(e)=>{
-
-    }
-    const negotiationNeeded=(e)=>{
-
-    }
-    const negotiationCompleted=(e)=>{
-        
-    }
-    useEffect(()=>{
-        if(socket)
-        {
-          socket.on('join_room',joinRoom);
-          socket.on('send offer',sendOffer);
-          socket.on('receive answer',receiveAnswer);
-          socket.on('negotiation',negotiationNeeded);
-          socket.on('negotation completed',negotiationCompleted);
-          return ()=>{
-            socket.off('join_room',joinRoom);
-            socket.off('send offer',sendOffer);
-            socket.off('receive answer',receiveAnswer);
-            socket.off('negotiation',negotiationNeeded);
-            socket.off('negotation completed',negotiationCompleted);  
-          }
+    const sendStreams = useCallback(async () => {
+        if (streams) {
+            try {
+                for (const track of streams.getTracks()) {
+                    PeerService.peer.addTrack(track, streams);
+                }
+            }
+            catch (e) {
+                console.log(e);
+            }
         }
-    },[socket,joinRoom,sendOffer,receiveAnswer,negotiationNeeded,negotiationCompleted])
+
+    }, [streams]);
+    const receiveOffer = useCallback(async (e) => {
+        console.log(e);
+        setRemoteSocket(e.from);//set remote socket id which is created in backend
+        const streams = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        setStreams(streams);
+        const answer = await PeerService.getAnswer(e.offer);
+        socket.emit('send_answer', { to: e.from, answer: answer });
+    }, [socket]);
+
+    const receiveAnswer = useCallback(async (e) => {
+        console.log(e);
+        await PeerService.setRemoteDescription(e.answer);
+        await sendStreams();
+    }, [sendStreams,socket]);
+
+    const negotiationNeeded = useCallback(async (e) => {
+        const { from, offer } = e;
+        console.log(offer);
+        const answer = await PeerService.getAnswer(offer);
+        socket.emit('negotiation_completed', { to: from, answer:answer });
+        sendStreams();
+    }, [socket, sendStreams]);
+
+    const negotiationCompleted = useCallback(async (e) => {
+        await PeerService.setRemoteDescription(e.answer);
+    }, [socket]);
+
+    const handleNegotiation = useCallback(async (e) => {
+        const offer = await PeerService.getOffer();
+        socket.emit('negotiation', { to: remoteSocket, offer: offer });
+    }, [remoteSocket, socket])
+    useEffect(() => {
+        PeerService.peer.addEventListener('track', async (e) => {
+            const remoteStream = e.streams;
+            setRemoteStreams(remoteStream[0]);
+            console.log(remoteStream);
+        })
+    }, [])
+
+    useEffect(() => {
+        PeerService.peer.addEventListener('negotiationneeded', handleNegotiation);
+        return () => {
+            PeerService.peer.removeEventListener('negotiationneeded', handleNegotiation);
+        }
+    }, [handleNegotiation])
+    useEffect(() => {
+        if (socket) {
+            showUserMedia();
+            socket.on('user_joined', joinRoom);
+            socket.on('receive_offer', receiveOffer);
+            socket.on('receive_answer', receiveAnswer);
+            socket.on('negotiation', negotiationNeeded);
+            socket.on('negotiation_completed', negotiationCompleted);
+            return () => {
+                socket.off('user_joined', joinRoom);
+                socket.off('receive_offer', receiveOffer);
+                socket.off('receive_answer', receiveAnswer);
+                socket.off('negotiation', negotiationNeeded);
+                socket.off('negotiation_completed', negotiationCompleted);
+            }
+        }
+    }, [socket, joinRoom, receiveAnswer, negotiationNeeded, negotiationCompleted, receiveOffer,showUserMedia])
     return (
         <div className="video__page__container">
-            <div className="stream__container">
-
+            <div className="stream__container mx-10">
+                {
+                    streams &&
+                        (<ReactPlayer playing className="stream" height="50%" width="100%"  url={streams} />)
+                }
             </div>
+
             <div className="remoteStream__container">
 
+                {
+                    remoteStreams && (<ReactPlayer playing className="rstream" height="50%" width="100%" url={remoteStreams} />)
+                    // :(<img src={CameraDisabled} alt="Camera disabled" width="50%" height="400px"/>)
+
+                }
+
             </div>
+    
         </div>
     )
 }

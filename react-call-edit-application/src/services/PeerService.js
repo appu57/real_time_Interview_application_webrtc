@@ -38,7 +38,7 @@ class PeerService {
     {
         if(this.peer)
         {
-          await this.peer.setRemoteDescription(answer);
+          await this.peer.setRemoteDescription(new RTCSessionDescription(answer));
         }
     }
 }

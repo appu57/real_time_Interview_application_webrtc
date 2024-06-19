@@ -57,7 +57,7 @@ body{
 }
 
 .codeeditor__page__container{
-  width: 80%;
+  width: 77%;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -81,7 +81,7 @@ body{
 }
 
 .video__page__container{
-  width: 20%;
+  width: 25%;
   height: 100%;
   border: 1px solid black;
   background: black;

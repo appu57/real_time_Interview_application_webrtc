@@ -1,4 +1,4 @@
-import React , {createContext, useContext} from 'react';
+import React , {createContext, useContext, useEffect, useState} from 'react';
 import {io} from 'socket.io-client'
 const SocketContext = createContext();
 export const useSocket = ()=>{
@@ -8,7 +8,15 @@ export const useSocket = ()=>{
 }
 
 const SocketContextProvider = ({children})=>{
-    const socket=io('http://localhost:3000',{transports:['websocket','polling','flashsocket']});
+    const [socket,setSocket]=useState(null);
+    useEffect(()=>{
+      const socketConn = io('http://localhost:3000',{transports:['websocket','polling','flashsocket']});
+      setSocket(socketConn);
+      return ()=>{
+          socketConn.close();
+          console.log('Socket connection is closed');
+      }
+    },[])
     return(
         <SocketContext.Provider value={socket}>
             {children}
