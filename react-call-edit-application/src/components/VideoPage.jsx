@@ -116,7 +116,6 @@ const VideoPage = () => {
                 }
 
             </div>
-    
         </div>
     )
 }
