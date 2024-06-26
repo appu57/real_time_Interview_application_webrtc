@@ -3,6 +3,7 @@ const app = express();
 const http = require('http');
 const cors = require('cors');
 const session = require('express-session');
+const executeCode = require('./routes/executeCode');
 app.set(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', 'views');
@@ -16,10 +17,15 @@ const server = http.Server(app);
 server.listen('3000', () => {
   console.log('Server listening to 3000');
 });
-
+app.use('/execute',executeCode); 
 const io = require('socket.io')(server);
 io.on('connection', (socket) => {
-
+  
+  socket.on('code_changes',(e)=>{
+    const {language,value,cb,to}=e;
+    console.log(e);
+    io.to(to).emit('code_changes_acceped',{...e})
+  })
   socket.on('join Room', (e) => {
     const socketId = socket.id;
     const rooms = io.sockets.adapter.rooms;
@@ -49,6 +55,9 @@ io.on('connection', (socket) => {
     const { to, answer } = e;
     io.to(to).emit('negotiation_completed', { from: socket.id, answer });
   });
+  socket.on('playground__change',(e)=>{
+    io.to(e.to).emit('playground__change',{...e});
+  })
   socket.on('close', (e) => {
     console.log('Socket disconnected');
   })

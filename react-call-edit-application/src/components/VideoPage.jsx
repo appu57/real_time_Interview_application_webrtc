@@ -3,11 +3,15 @@ import { useSocket } from '../contexts/SocketContext';
 import { useContext, useEffect, useState, useCallback } from 'react';
 import ReactPlayer from 'react-player';
 import PeerService from '../services/PeerService';
+import { useSelectedUserContext } from '../contexts/SelectedUserContext'
+
 const VideoPage = () => {
     const socket = useSocket();
     const [remoteSocket, setRemoteSocket] = useState(null);
     const [remoteStreams, setRemoteStreams] = useState(null);
     const [streams, setStreams] = useState(null);
+    const [selectedUserContext, setSelectedUserContext]=useSelectedUserContext();
+
     const joinRoom = (e) => {
         console.log(e);
         sendOffer(e.userId);
@@ -19,6 +23,7 @@ const VideoPage = () => {
 
     const sendOffer =useCallback (async(to) => {
         setRemoteSocket(to);
+        setSelectedUserContext(to) 
         const offer = await PeerService.getOffer();
         socket.emit('send_offer', { to: to, offer: offer });
     },[socket,streams]);
@@ -37,8 +42,9 @@ const VideoPage = () => {
 
     }, [streams]);
     const receiveOffer = useCallback(async (e) => {
-        console.log(e);
+        setSelectedUserContext(e.from);        
         setRemoteSocket(e.from);//set remote socket id which is created in backend
+        
         const streams = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
         setStreams(streams);
         const answer = await PeerService.getAnswer(e.offer);

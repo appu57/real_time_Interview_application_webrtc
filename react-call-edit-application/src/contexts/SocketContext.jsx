@@ -10,14 +10,13 @@ export const useSocket = () => {
 const SocketContextProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
     useEffect(() => {
-        if (socket == null) {
-            const socketConn = io('http://localhost:3000', { transports: ['websocket', 'polling', 'flashsocket'] });
+            const socketConn = io('http://localhost:3000', {timeout:1000,reconnectionAttempts:'Infinity' ,transports: ['websocket', 'polling', 'flashsocket'] });
             setSocket(socketConn);
             return () => {
                 socketConn.close();
                 console.log('Socket connection is closed');
             }
-        }
+        
     }, [])
     return (
         <SocketContext.Provider value={socket}>
