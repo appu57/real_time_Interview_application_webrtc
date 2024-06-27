@@ -22,8 +22,17 @@ executeCode.post('/', (req, res) => {
         switch (language) {
             case 'java':
                 filename = 'JavaProgram.java';
-                compileCommand = `javac ${filename}`;
+                compileCommand = `javac -O ${filename}`;
                 runCommand = `java ${filename}`;
+                break;
+            case 'javascript':
+                filename='script.js';
+                runCommand=`node ${filename}`;
+                break;
+            case 'cpp':
+                filename='program.cpp';
+                compileCommand=`g++ -o program ${filename}`;
+                runCommand=`./program`;
                 break;
             default:
                 return rejects('Unsupported Language');
@@ -49,9 +58,11 @@ executeCode.post('/', (req, res) => {
                 exec(command, { cwd: uniqueDirectory }, (err, stdout, stderr) => {
                     console.log('std', stdout)
                     if (err) {
-                        console.log(err);
+                        console.log(stderr);
+                        const lines = stderr.trim().split('\n');
+                        let errorlines= lines.length>0 ? lines[4]:'Unknown error';
                         res.status = 501;
-                        res.json({ error: stderr });
+                        res.json({ error: errorlines });
                         return res;
                     }
                     if (commands.length == 0) {

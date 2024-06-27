@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const { code, language, directory, uniqueId } = workerData;
 function executeCode(code, language, directory) {
-    return new Promise((resolve, rejects) => {
         let filename;
         let compileCommand;
         let runCommand;
@@ -52,7 +51,6 @@ function executeCode(code, language, directory) {
                 }
                 executeCommands(commands);
             });
-        })
         })
     }
 

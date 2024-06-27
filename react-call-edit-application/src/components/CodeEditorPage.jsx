@@ -9,6 +9,10 @@ import 'codemirror/theme/dracula.css'
 import WebEditor from './codeEditors/WebEditor';
 import { useRef, useState } from 'react';
 import Java from './codeEditors/Java';
+import Javascript from './codeEditors/Javascript';
+import CcodeEditor from './codeEditors/CcodeEditor';
+
+
 import { useSocket } from '../contexts/SocketContext'
 import { useSelectedUserContext } from '../contexts/SelectedUserContext'
 
@@ -44,20 +48,26 @@ const CodeEditorPage = () => {
             <div className="dropdown__option__container">
                 <label>Select Playground : </label>
                 <select name="language" id="langauges" onChange={onlanguagechange}  ref={userOptionSelect}>
-                    <option value="">Select</option>
+                <option value="webdev">Web Developement</option>
                     <option value="java">Java</option>
                     <option value="javascript">Javascript</option>
                     <option value="C++">C++</option>
-                    <option value="webdev">Web Developement</option>
                 </select>
 
             </div>
+            {
+                language=="javascript" && <Javascript/>
+            }
             {
                 language == "java" && <Java />
             }
             {
                 language=='webdev' && <WebEditor />
             }
+            {
+                language=='C++' && <CcodeEditor/>
+            }
+
 
         </div>
     )

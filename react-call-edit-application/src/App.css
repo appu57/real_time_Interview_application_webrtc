@@ -64,7 +64,7 @@ body{
 }
 
 .editor__page__container{
-  border:1px solid black;
+  background: #252323;
   height: 60%;
   display: flex;
 }
@@ -79,13 +79,14 @@ body{
   height: max-content;
   background: green;
   margin: 10px;
+  color:white
 }
 .video__page__container{
   padding: 10px;
-  width: 25%;
+  width: 20%;
   height: 100%;
   border: 1px solid black;
-  background: black;
+  background: #303033;
   display: flex;
   flex-direction: column;
   
@@ -135,24 +136,22 @@ video{
     height: 30px;
     padding-left: 20px;
 }
-/* .cm-s-dracula.CodeMirror, .cm-s-dracula .CodeMirror-gutters {
-  min-height: 325px;
-} */
 
 .editor__code__container .cm-s-dracula.CodeMirror, .cm-s-dracula .CodeMirror-gutters{
   min-height: 528px;
 }
 
-.editor__code__container .Java{
-  width: 70%;
+.editor__code__container .Java ,.editor__code__container .Javascript ,.editor__code__container .CPP{
+  margin-left: 8px;
+  width: 80%;
   height: 100%;
 }
 .editor__title{
   background: #303033  !important;
   text-transform: capitalize;
   text-align: center;
-  box-shadow: 2px 2px  gray;
-  border: 1px solid gray;
+  /* box-shadow: 2px 2px gray; */
+  /* border: 1px solid gray; */
   display: flex;
   justify-content: center;
   height: 33px;
@@ -166,7 +165,8 @@ video{
 }
 
 .language__container{
-  width: 77%;
+  width: 80%;
+  background-color: black;
 }
 
 .iframe__container{
@@ -176,12 +176,14 @@ video{
 .dropdown__option__container{
   display: flex;
   background: transparent;
+  -webkit-backdrop-filter: blur(30px);
   backdrop-filter: blur(30px);
-  border: 2px solid rgba(255,255,255,0.18);
+  border: 2px solid rgba(255, 255, 255, 0.18);
   align-items: center;
-  padding: 2px;
-  margin: 2px;
+  padding: 10px;
   gap: 20px;
+  background: #252323;
+  border: transparent;
 }
 
 .dropdown__option__container select{
@@ -196,10 +198,6 @@ video{
   cursor: pointer;
 }
 
-.dropdown__option__container select{
-  
-}
-
 p{
   margin: 0;
 }
@@ -209,10 +207,15 @@ html{
   overflow-x: hidden;
 }
 
+.editor__code__container{
+  margin-top: 20px;
+}
+
 .editor__code__container .results__container{
   border: 1px solid rgb(70, 71, 70);
   margin: 0px 5px;
   width: 30%;
+  background-color: #252323;
 }
 .editor__code__container button{
   background-color: lightgreen;
@@ -231,4 +234,19 @@ html{
   .editor__code__container .Java{
     padding: 0;
   }
+}
+
+label{
+  color: white;
+  text-shadow: 1px 1px gray;
+  letter-spacing: 1px;
+}
+
+option{
+  background-color: #282a36 !important;
+  color: white;
+}
+
+option:hover{
+  font-weight: bold;
 }
