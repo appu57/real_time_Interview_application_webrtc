@@ -48,7 +48,6 @@ executeCode.post('/', (req, res) => {
             console.log('command', commands);
             const executeCommands = (commands) => {
                 if (commands.length == 0) {
-                    console.log(commands);
                     cleanup(uniqueDirectory);
                     res.status = 200;
                     res.json({ output: 'Execution Completed' });
@@ -67,7 +66,6 @@ executeCode.post('/', (req, res) => {
                     }
                     if (commands.length == 0) {
                         cleanup(uniqueDirectory);
-                        console.log(stdout);
                         res.status = 200;
                         res.json({ output: stdout });
                     }
@@ -83,7 +81,6 @@ executeCode.post('/', (req, res) => {
 })
 
 function cleanup(directory) {
-    console.log(directory);
     fs.rmdir(directory, { recursive: true }, (err) => {
         if (err) {
             console.error('Failed to remove directory');
