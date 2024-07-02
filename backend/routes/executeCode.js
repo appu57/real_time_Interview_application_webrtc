@@ -59,7 +59,7 @@ executeCode.post('/', (req, res) => {
                     if (err) {
                         console.log(stderr);
                         const lines = stderr.trim().split('\n');
-                        let errorlines= lines.length>0 ? lines[4]:'Unknown error';
+                        let errorlines= lines.length>0 ?lines[1]+"\n" +lines[4]:'Unknown error';
                         res.status = 501;
                         res.json({ error: errorlines });
                         return res;
@@ -88,5 +88,4 @@ function cleanup(directory) {
     })
 }
 module.exports = executeCode;
-
 

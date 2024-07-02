@@ -216,6 +216,8 @@ html{
   margin: 0px 5px;
   width: 30%;
   background-color: #252323;
+  color:white;
+  word-wrap: break-word;
 }
 .editor__code__container button{
   background-color: lightgreen;
@@ -234,7 +236,13 @@ html{
   .editor__code__container .Java{
     padding: 0;
   }
+
+  .form__container{
+      width: 50%;
+
+  }
 }
+
 
 label{
   color: white;
@@ -249,4 +257,57 @@ option{
 
 option:hover{
   font-weight: bold;
+}
+
+.home_page_container{
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: black;
+  flex-direction: column;
+}
+.formField{
+  width: 100%;
+  height: 44px;
+  margin-top: 5%;
+  border-radius: 8px;
+  border: transparent;
+  padding: 10px;
+}
+
+.form__container{
+  background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+
+    width: 36%;
+    height: 50%;
+    border-radius: 10px;
+    text-align: center;
+    padding: 2%;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+}
+
+.output__container pre{
+  color: white !important;
+}
+.login__page__container .button__container{
+  display: flex;
+  margin: 20px 0px;
+}
+
+.form__container h2{
+  color: white;
+}
+
+.video__button__container{
+  display: flex;
+  justify-content: space-around;
+  color: white;
+  margin-top: -34px;
+  cursor: pointer;
 }

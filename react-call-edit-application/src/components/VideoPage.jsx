@@ -5,12 +5,20 @@ import ReactPlayer from 'react-player';
 import PeerService from '../services/PeerService';
 import { useSelectedUserContext } from '../contexts/SelectedUserContext'
 
+import { AiOutlineAudioMuted } from "react-icons/ai";
+import { FaVideoSlash } from "react-icons/fa";
+import { PiPhoneDisconnectThin } from "react-icons/pi";
+import { IoChatboxEllipsesSharp } from "react-icons/io5";
+import { FaVideo } from "react-icons/fa";
+import { FaMicrophoneAlt } from "react-icons/fa";
 const VideoPage = () => {
     const socket = useSocket();
     const [remoteSocket, setRemoteSocket] = useState(null);
     const [remoteStreams, setRemoteStreams] = useState(null);
     const [streams, setStreams] = useState(null);
-    const [selectedUserContext, setSelectedUserContext]=useSelectedUserContext();
+    const [selectedUserContext, setSelectedUserContext] = useSelectedUserContext();
+    const [videoEnabled, setVideoState] = useState(true);
+    const [audioEnabled, setAudioState] = useState(true);
 
     const joinRoom = (e) => {
         console.log(e);
@@ -19,14 +27,14 @@ const VideoPage = () => {
     const showUserMedia = useCallback(async () => {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
         setStreams(stream);
-    }, [socket,streams]);
+    }, [socket, streams]);
 
-    const sendOffer =useCallback (async(to) => {
+    const sendOffer = useCallback(async (to) => {
         setRemoteSocket(to);
-        setSelectedUserContext(to) 
+        setSelectedUserContext(to)
         const offer = await PeerService.getOffer();
         socket.emit('send_offer', { to: to, offer: offer });
-    },[socket,streams]);
+    }, [socket, streams]);
 
     const sendStreams = useCallback(async () => {
         if (streams) {
@@ -42,9 +50,9 @@ const VideoPage = () => {
 
     }, [streams]);
     const receiveOffer = useCallback(async (e) => {
-        setSelectedUserContext(e.from);        
+        setSelectedUserContext(e.from);
         setRemoteSocket(e.from);//set remote socket id which is created in backend
-        
+
         const streams = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
         setStreams(streams);
         const answer = await PeerService.getAnswer(e.offer);
@@ -55,13 +63,13 @@ const VideoPage = () => {
         console.log(e);
         await PeerService.setRemoteDescription(e.answer);
         await sendStreams();
-    }, [sendStreams,socket]);
+    }, [sendStreams, socket]);
 
     const negotiationNeeded = useCallback(async (e) => {
         const { from, offer } = e;
         console.log(offer);
         const answer = await PeerService.getAnswer(offer);
-        socket.emit('negotiation_completed', { to: from, answer:answer });
+        socket.emit('negotiation_completed', { to: from, answer: answer });
         sendStreams();
     }, [socket, sendStreams]);
 
@@ -73,9 +81,28 @@ const VideoPage = () => {
         const offer = await PeerService.getOffer();
         socket.emit('negotiation', { to: remoteSocket, offer: offer });
     }, [remoteSocket, socket])
-    const leaveMeeting=()=>{
+    const leaveMeeting = () => {
 
     }
+
+    const onMute = () => {
+        
+        streams.getTracks().forEach(track => {
+            if (track.kind == 'audio') {
+                track.enabled = !track.enabled;
+                setAudioState(track.enabled);
+            }
+        });
+    };
+    const onVideoDisable = () => {
+        streams.getTracks().forEach(track => {
+            if (track.kind == 'video') {
+                track.enabled = !track.enabled;
+                setVideoState(track.enabled);
+            }
+        });
+    }
+
     useEffect(() => {
         PeerService.peer.addEventListener('track', async (e) => {
             const remoteStream = e.streams;
@@ -106,22 +133,33 @@ const VideoPage = () => {
                 socket.off('negotiation_completed', negotiationCompleted);
             }
         }
-    }, [socket, joinRoom, receiveAnswer, negotiationNeeded, negotiationCompleted, receiveOffer,showUserMedia])
+    }, [socket, joinRoom, receiveAnswer, negotiationNeeded, negotiationCompleted, receiveOffer, showUserMedia])
     return (
         <div className="video__page__container">
-            <div className="stream__container" style={{height:"45%"}}>
+            <div className="stream__container" style={{ height: "45%" }}>
                 {
                     streams &&
-                        (<ReactPlayer playing className="stream" height="100%" width="100%"  url={streams} />)
+                    (<ReactPlayer playing className="stream" height="100%" width="100%" url={streams} />)
+                }
+                {
+                    streams && (<div className="video__button__container">
+                        <div className="button button--mute" onClick={onMute}>{!audioEnabled ? (<AiOutlineAudioMuted />) : (<FaMicrophoneAlt />)}</div>
+                        <div className="button button--video" onClick={onVideoDisable}>{!videoEnabled ? (<FaVideoSlash />) : (<FaVideo />)}</div>
+                    </div>)
                 }
             </div>
 
-            <div className="remoteStream__container " style={{height:"45%"}}>
+            <div className="remoteStream__container " style={{ height: "45%" }}>
 
                 {
                     remoteStreams && (<ReactPlayer playing className="rstream" height="100%" width="100%" url={remoteStreams} />)
                     // :(<img src={CameraDisabled} alt="Camera disabled" width="50%" height="400px"/>)
-
+                }
+                {
+                    remoteStreams && (<div className="video__button__container">
+                        <div className="button button--mute" onClick={onMute}>{!audioEnabled ? (<AiOutlineAudioMuted />) : (<FaMicrophoneAlt />)}</div>
+                        <div className="button button--video" onClick={onVideoDisable}>{!videoEnabled ? (<FaVideoSlash />) : (<FaVideo />)}</div>
+                    </div>)
                 }
 
             </div>

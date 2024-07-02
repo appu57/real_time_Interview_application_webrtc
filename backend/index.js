@@ -17,10 +17,16 @@ const server = http.Server(app);
 server.listen('3000', () => {
   console.log('Server listening to 3000');
 });
+const map = new Map();
 app.use('/execute',executeCode); 
 const io = require('socket.io')(server);
 io.on('connection', (socket) => {
-  
+  socket.on('runcode',(e)=>{
+    io.to(e.to).emit('run code',{...e})
+  })
+  socket.on('compiling code',(e)=>{
+    io.to(e.to).emit('compile code',{...e})
+  })
   socket.on('code_changes',(e)=>{
     const {language,value,cb,to}=e;
     console.log(e);
@@ -30,10 +36,13 @@ io.on('connection', (socket) => {
     const socketId = socket.id;
     const rooms = io.sockets.adapter.rooms;
     const roomExists = rooms.get(e.roomId);
+    console.log(map.get(e.roomId));
+    console.log(e.password)
     if (roomExists != undefined && roomExists.size==1) {
       io.to(e.roomId).emit('user_joined', { userId: socketId });//once when a user logs in he will join room then when other user joins the event is emitted to the room members
     }
     socket.join(e.roomId);//first emit to members of the room and then join so event is not emitted back to login user
+    map.set(e.roomId,e.password);
   });
   socket.on('send_offer', (e) => {
     console.log(e);
