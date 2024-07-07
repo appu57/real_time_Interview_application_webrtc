@@ -1,6 +1,8 @@
 import { useSocket } from '../contexts/SocketContext';
 import { useContext, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import PeerService from '../services/PeerService';
+
 const LoginPage = () => {
     const navigation = useNavigate();
     const socket = useSocket();

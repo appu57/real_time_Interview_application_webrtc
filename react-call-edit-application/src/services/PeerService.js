@@ -41,5 +41,19 @@ class PeerService {
           await this.peer.setRemoteDescription(new RTCSessionDescription(answer));
         }
     }
+
+     createConnection(){
+        this.peer =  RTCPeerConnection({
+            iceServers: [
+                {
+                    urls: [
+                        "stun:stun.services.mozilla.com",
+                        "stun:stun1.1.google.com:19302"
+                    ]
+                }
+            ]
+        })
+        console.log(this.peer)
+    }
 }
 export default new PeerService();

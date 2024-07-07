@@ -307,7 +307,18 @@ option:hover{
 .video__button__container{
   display: flex;
   justify-content: space-around;
-  color: white;
-  margin-top: -34px;
+  color: rgb(228, 222, 222);
+  margin-top: -20px;
   cursor: pointer;
+}
+
+
+video{
+  pointer-events: none;
+}
+
+iframe{
+  min-height: 261px;
+  overflow-y: scroll;
+  background: white;
 }

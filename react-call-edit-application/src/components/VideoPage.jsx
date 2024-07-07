@@ -7,8 +7,7 @@ import { useSelectedUserContext } from '../contexts/SelectedUserContext'
 
 import { AiOutlineAudioMuted } from "react-icons/ai";
 import { FaVideoSlash } from "react-icons/fa";
-import { PiPhoneDisconnectThin } from "react-icons/pi";
-import { IoChatboxEllipsesSharp } from "react-icons/io5";
+
 import { FaVideo } from "react-icons/fa";
 import { FaMicrophoneAlt } from "react-icons/fa";
 const VideoPage = () => {
@@ -19,15 +18,17 @@ const VideoPage = () => {
     const [selectedUserContext, setSelectedUserContext] = useSelectedUserContext();
     const [videoEnabled, setVideoState] = useState(true);
     const [audioEnabled, setAudioState] = useState(true);
-
+    const [leaveMeeting,setLeaveMeeting]=useState(false);
+    let callUserMedia=true;
     const joinRoom = (e) => {
         console.log(e);
         sendOffer(e.userId);
     }
-    const showUserMedia = useCallback(async () => {
+    const showUserMedia = async () => {
+        console.log('user')
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
         setStreams(stream);
-    }, [socket, streams]);
+    };
 
     const sendOffer = useCallback(async (to) => {
         setRemoteSocket(to);
@@ -81,12 +82,16 @@ const VideoPage = () => {
         const offer = await PeerService.getOffer();
         socket.emit('negotiation', { to: remoteSocket, offer: offer });
     }, [remoteSocket, socket])
-    const leaveMeeting = () => {
-
+    const LeaveMeeting = () => {
+        if (streams) {
+            streams.getTracks().forEach(track => track.stop());
+        }
+        PeerService.peer.close();
+        setLeaveMeeting(true);
+        setStreams(null);
     }
 
     const onMute = () => {
-        
         streams.getTracks().forEach(track => {
             if (track.kind == 'audio') {
                 track.enabled = !track.enabled;
@@ -94,13 +99,14 @@ const VideoPage = () => {
             }
         });
     };
-    const onVideoDisable = () => {
+    const onVideoDisable = (e) => {
         streams.getTracks().forEach(track => {
             if (track.kind == 'video') {
                 track.enabled = !track.enabled;
                 setVideoState(track.enabled);
             }
         });
+
     }
 
     useEffect(() => {
@@ -119,7 +125,16 @@ const VideoPage = () => {
     }, [handleNegotiation])
     useEffect(() => {
         if (socket) {
-            showUserMedia();
+            if(!PeerService.peer)
+            {
+                PeerService.createConnection();
+            }
+            if(!leaveMeeting && callUserMedia)
+            {
+                showUserMedia();
+                callUserMedia=false;
+                
+            }
             socket.on('user_joined', joinRoom);
             socket.on('receive_offer', receiveOffer);
             socket.on('receive_answer', receiveAnswer);
@@ -141,12 +156,7 @@ const VideoPage = () => {
                     streams &&
                     (<ReactPlayer playing className="stream" height="100%" width="100%" url={streams} />)
                 }
-                {
-                    streams && (<div className="video__button__container">
-                        <div className="button button--mute" onClick={onMute}>{!audioEnabled ? (<AiOutlineAudioMuted />) : (<FaMicrophoneAlt />)}</div>
-                        <div className="button button--video" onClick={onVideoDisable}>{!videoEnabled ? (<FaVideoSlash />) : (<FaVideo />)}</div>
-                    </div>)
-                }
+
             </div>
 
             <div className="remoteStream__container " style={{ height: "45%" }}>
@@ -155,16 +165,14 @@ const VideoPage = () => {
                     remoteStreams && (<ReactPlayer playing className="rstream" height="100%" width="100%" url={remoteStreams} />)
                     // :(<img src={CameraDisabled} alt="Camera disabled" width="50%" height="400px"/>)
                 }
-                {
-                    remoteStreams && (<div className="video__button__container">
-                        <div className="button button--mute" onClick={onMute}>{!audioEnabled ? (<AiOutlineAudioMuted />) : (<FaMicrophoneAlt />)}</div>
-                        <div className="button button--video" onClick={onVideoDisable}>{!videoEnabled ? (<FaVideoSlash />) : (<FaVideo />)}</div>
-                    </div>)
-                }
 
             </div>
             <div className="button__container">
-                <button className="btn btn_leave_meeting" onClick={leaveMeeting}>Leave Meeting</button>
+                <div className="video__button__container">
+                    <div className="button button--mute" onClick={onMute}>{!audioEnabled ? (<AiOutlineAudioMuted />) : (<FaMicrophoneAlt />)}</div>
+                    <div className="button button--video" onClick={onVideoDisable}>{!videoEnabled ? (<FaVideoSlash />) : (<FaVideo />)}</div>
+                </div>
+                <button className="btn btn_leave_meeting" onClick={LeaveMeeting}>Leave Meeting</button>
             </div>
         </div>
     )
