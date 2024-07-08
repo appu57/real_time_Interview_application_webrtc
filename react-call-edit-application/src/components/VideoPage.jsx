@@ -7,6 +7,7 @@ import { useSelectedUserContext } from '../contexts/SelectedUserContext'
 
 import { AiOutlineAudioMuted } from "react-icons/ai";
 import { FaVideoSlash } from "react-icons/fa";
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { FaVideo } from "react-icons/fa";
 import { FaMicrophoneAlt } from "react-icons/fa";
@@ -18,14 +19,18 @@ const VideoPage = () => {
     const [selectedUserContext, setSelectedUserContext] = useSelectedUserContext();
     const [videoEnabled, setVideoState] = useState(true);
     const [audioEnabled, setAudioState] = useState(true);
-    const [leaveMeeting,setLeaveMeeting]=useState(false);
-    let callUserMedia=true;
+    const [leaveMeeting, setLeaveMeeting] = useState(false);
+    const navigation = useNavigate();
+    const [callUserMedia, setCallUserMedia] = useState(true);
+    const {roomId} = useParams();
     const joinRoom = (e) => {
-        console.log(e);
+        console.log('join',e);
         sendOffer(e.userId);
     }
     const showUserMedia = async () => {
-        console.log('user')
+        if (PeerService.peer.signalingState=='closed') {
+            PeerService.createConnection();
+        }
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
         setStreams(stream);
     };
@@ -34,6 +39,7 @@ const VideoPage = () => {
         setRemoteSocket(to);
         setSelectedUserContext(to)
         const offer = await PeerService.getOffer();
+        console.log(offer)
         socket.emit('send_offer', { to: to, offer: offer });
     }, [socket, streams]);
 
@@ -83,12 +89,17 @@ const VideoPage = () => {
         socket.emit('negotiation', { to: remoteSocket, offer: offer });
     }, [remoteSocket, socket])
     const LeaveMeeting = () => {
+        socket.emit('leave',{roomId:roomId,to:selectedUserContext})
         if (streams) {
             streams.getTracks().forEach(track => track.stop());
         }
         PeerService.peer.close();
         setLeaveMeeting(true);
         setStreams(null);
+        setRemoteStreams(null);
+        setCallUserMedia(true);
+        navigation('/');
+
     }
 
     const onMute = () => {
@@ -106,49 +117,62 @@ const VideoPage = () => {
                 setVideoState(track.enabled);
             }
         });
-
+    }
+    
+    const addTrack=(e)=>{
+        const remoteStream = e.streams;
+        setRemoteStreams(remoteStream[0]);
+        console.log(remoteStream);
+    }
+    const closeRemoteSocket=(e)=>{
+        setRemoteStreams(null);
     }
 
     useEffect(() => {
-        PeerService.peer.addEventListener('track', async (e) => {
-            const remoteStream = e.streams;
-            setRemoteStreams(remoteStream[0]);
-            console.log(remoteStream);
-        })
-    }, [])
+        if(PeerService.peer)
+        {
+        PeerService.peer.addEventListener('track',addTrack)
+         return ()=>{
+             PeerService.peer.removeEventListener('track',addTrack);
+         }
+        }
+    }, [addTrack])
 
     useEffect(() => {
+        if(PeerService.peer)
+        {
         PeerService.peer.addEventListener('negotiationneeded', handleNegotiation);
         return () => {
             PeerService.peer.removeEventListener('negotiationneeded', handleNegotiation);
-        }
+        }}
     }, [handleNegotiation])
     useEffect(() => {
         if (socket) {
-            if(!PeerService.peer)
-            {
+            if (!PeerService.peer) {
                 PeerService.createConnection();
             }
-            if(!leaveMeeting && callUserMedia)
-            {
+            if (!leaveMeeting ) {
                 showUserMedia();
-                callUserMedia=false;
-                
+                setCallUserMedia(false);
+
             }
             socket.on('user_joined', joinRoom);
             socket.on('receive_offer', receiveOffer);
             socket.on('receive_answer', receiveAnswer);
             socket.on('negotiation', negotiationNeeded);
             socket.on('negotiation_completed', negotiationCompleted);
+            socket.on('leave meeting',closeRemoteSocket)
             return () => {
                 socket.off('user_joined', joinRoom);
                 socket.off('receive_offer', receiveOffer);
                 socket.off('receive_answer', receiveAnswer);
                 socket.off('negotiation', negotiationNeeded);
                 socket.off('negotiation_completed', negotiationCompleted);
+                socket.off('leave meeting',closeRemoteSocket)
+
             }
         }
-    }, [socket, joinRoom, receiveAnswer, negotiationNeeded, negotiationCompleted, receiveOffer, showUserMedia])
+    }, [socket, joinRoom, receiveAnswer, negotiationNeeded, negotiationCompleted, receiveOffer, showUserMedia,closeRemoteSocket])
     return (
         <div className="video__page__container">
             <div className="stream__container" style={{ height: "45%" }}>

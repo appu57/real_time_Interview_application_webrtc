@@ -1,16 +1,7 @@
 class PeerService {
     constructor() {
         if (!this.peer) {
-            this.peer = new RTCPeerConnection({
-                iceServers: [
-                    {
-                        urls: [
-                            "stun:stun.services.mozilla.com",
-                            "stun:stun1.1.google.com:19302"
-                        ]
-                    }
-                ]
-            })
+          this.createConnection();
         }
     }
 
@@ -18,6 +9,7 @@ class PeerService {
         if(this.peer)
         {
          const offer = await this.peer.createOffer();//once we create an offer we have to set local description of the offer created once when peer sends the answer we can set remotedescription
+        console.log(offer);
          await this.peer.setLocalDescription(new RTCSessionDescription(offer));
          return offer;
         }
@@ -43,7 +35,7 @@ class PeerService {
     }
 
      createConnection(){
-        this.peer =  RTCPeerConnection({
+        this.peer = new RTCPeerConnection({
             iceServers: [
                 {
                     urls: [
@@ -54,6 +46,15 @@ class PeerService {
             ]
         })
         console.log(this.peer)
+    }
+
+    leave(){
+        if(this.peer)
+        {
+            this.peer.getSenders().forEach(sender=>sender.track.stop());
+            this.peer.close();
+            this.peer=null;
+        }
     }
 }
 export default new PeerService();

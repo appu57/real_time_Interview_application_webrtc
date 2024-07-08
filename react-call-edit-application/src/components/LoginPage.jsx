@@ -23,14 +23,16 @@ const LoginPage = () => {
         password: ''
     })
     const handleUserJoin = useCallback((e) => {
-        console.log(formValues);
         if (socket) {
-            socket.emit('join Room', { roomId: formValues['roomId'], password:formValues['password'] });
-            navigation('/home');
+            const roomId='1';
+            socket.emit('join Room', { roomId: roomId, password:formValues['password'] });
+            navigation(`/home/1`);
         }
     }, [socket]);
     const handleFormValues = (e) => {
+        console.log(e.target);
         setFormValues({ ...formValues, [e.target.name]: e.target.value });
+        console.log(formValues);
     }
     const handleRandomRoomIdGeneration = () => {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ-';
@@ -42,7 +44,9 @@ const LoginPage = () => {
             uniquePassword+=characters[passwordRandom];
 
         }
-        setFormValues({['roomId']:uniqueroomId,['password']:uniquePassword});
+        console.log(uniqueroomId);
+       
+        setFormValues({...formValues,['roomId']:uniqueroomId,['password']:uniquePassword});
         console.log(formValues);
 
     }
@@ -58,7 +62,7 @@ const LoginPage = () => {
                     {
                         fields.map((field, index) => (
                             <div className="roomId__input__container" key={index}>
-                                <input className="formField" {...field} onChange={handleFormValues} value={formValues[field.name]} />
+                                <input className="formField" {...field} onChange={handleFormValues}  />
                             </div>
                         ))
                     }

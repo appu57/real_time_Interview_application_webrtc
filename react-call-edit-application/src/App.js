@@ -18,7 +18,7 @@ function App() {
         <SelectedUserContextProvider>
         <Routes>
           <Route path="/" Component={LoginPage} />
-          <Route path="home"  Component={HomePage} />
+          <Route path="home/:roomId"  Component={HomePage} />
         </Routes>
         </SelectedUserContextProvider>
       </SocketContextProvider>

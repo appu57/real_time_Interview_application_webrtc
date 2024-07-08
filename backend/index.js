@@ -33,24 +33,28 @@ io.on('connection', (socket) => {
     io.to(to).emit('code_changes_acceped',{...e})
   })
   socket.on('join Room', (e) => {
+    console.log('join room');
     const socketId = socket.id;
     const rooms = io.sockets.adapter.rooms;
     const roomExists = rooms.get(e.roomId);
-    console.log(map.get(e.roomId));
-    console.log(e.password)
+    console.log(socketId);
+    console.log(roomExists)
     if (roomExists != undefined && roomExists.size==1) {
       io.to(e.roomId).emit('user_joined', { userId: socketId });//once when a user logs in he will join room then when other user joins the event is emitted to the room members
     }
     socket.join(e.roomId);//first emit to members of the room and then join so event is not emitted back to login user
     map.set(e.roomId,e.password);
+    console.log('room',roomExists);
   });
   socket.on('send_offer', (e) => {
+    console.log('SEND OFFER');
     console.log(e);
     const socketId = socket.id;
     const { to, offer } = e;
     io.to(to).emit('receive_offer', { from: socketId, offer: offer });
   });
   socket.on('send_answer', (e) => {
+    console.log('SEND ANSWER')
     console.log(e);
     const socketId = socket.id;
     const { to, answer } = e;
@@ -67,8 +71,16 @@ io.on('connection', (socket) => {
   socket.on('playground__change',(e)=>{
     io.to(e.to).emit('playground__change',{...e});
   })
+
+  socket.on('leave',(e)=>{
+    console.log('leave',e.roomId);
+    socket.leave(e.roomId);
+    io.to(e.to).emit('leave meeting',{...e})
+  })
+
   socket.on('close', (e) => {
     console.log('Socket disconnected');
   })
+
 })
 
