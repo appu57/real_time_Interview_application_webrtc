@@ -322,3 +322,8 @@ iframe{
   overflow-y: scroll;
   background: white;
 }
+
+.btn-runCode{
+  width: 100%;
+  margin-bottom: 20px;
+}

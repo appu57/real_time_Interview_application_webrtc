@@ -8,14 +8,14 @@ const LoginPage = () => {
     const socket = useSocket();
     const [fields, setFields] = useState([
         {
-            name: 'roomId',
-            placeholder: 'Enter the Room Id',
-            type: 'text'
+            name: "roomId",
+            placeholder: "Enter the Room Id",
+            type: "text"
         },
         {
-            name: 'password',
-            placeholder: 'Enter the passcode',
-            type: 'text'
+            name: "password",
+            placeholder: "Enter the passcode",
+            type: "text"
         }
     ])
     const [formValues, setFormValues] = useState({
@@ -24,15 +24,20 @@ const LoginPage = () => {
     })
     const handleUserJoin = useCallback((e) => {
         if (socket) {
-            const roomId='1';
-            socket.emit('join Room', { roomId: roomId, password:formValues['password'] });
-            navigation(`/home/1`);
+            if(formValues.roomId && formValues.password)
+            {
+            // navigation(`/home/${formValues.roomId}`);
+             socket.emit('join Room', { roomId: formValues.roomId, password:formValues.password });
+            }
         }
-    }, [socket]);
+    }, [socket,formValues]);
+
     const handleFormValues = (e) => {
-        console.log(e.target);
-        setFormValues({ ...formValues, [e.target.name]: e.target.value });
-        console.log(formValues);
+        e.preventDefault();
+        setFormValues(prev=>({
+            ...prev,
+            [e.target.name]:e.target.value
+        }));
     }
     const handleRandomRoomIdGeneration = () => {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ-';
@@ -42,14 +47,30 @@ const LoginPage = () => {
             const passwordRandom = Math.floor(Math.random() * characters.length);
             uniqueroomId += characters[roomIdrandom];
             uniquePassword+=characters[passwordRandom];
-
         }
         console.log(uniqueroomId);
-       
-        setFormValues({...formValues,['roomId']:uniqueroomId,['password']:uniquePassword});
+        setFormValues({roomId:uniqueroomId,password:uniquePassword});
         console.log(formValues);
 
     }
+    const showInvalidMessage=(e)=>{
+      console.log(e.message);
+    }
+    const navigateToHome=(e)=>{
+        navigation(`/home/${formValues.roomId}`);
+    }
+    useEffect(()=>{
+        if(socket)
+        {
+          socket.on('invalid password',showInvalidMessage);
+          socket.on('valid password',navigateToHome);
+          return ()=>{
+            socket.off('invalid password',showInvalidMessage);
+            socket.off('valid password',navigateToHome);
+
+          }
+        }
+    },[socket,showInvalidMessage,navigateToHome])
     return (
         <div className="login__page__container">
             <div className="home_page_container">
@@ -61,9 +82,7 @@ const LoginPage = () => {
                 <form>
                     {
                         fields.map((field, index) => (
-                            <div className="roomId__input__container" key={index}>
-                                <input className="formField" {...field} onChange={handleFormValues}  />
-                            </div>
+                            <input className="formField" {...field} onChange={handleFormValues} key={index} value={formValues[field.name]}/>
                         ))
                     }
 

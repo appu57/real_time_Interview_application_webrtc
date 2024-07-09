@@ -19,7 +19,9 @@ server.listen('3000', () => {
 });
 const map = new Map();
 app.use('/execute',executeCode); 
+
 const io = require('socket.io')(server);
+
 io.on('connection', (socket) => {
   socket.on('runcode',(e)=>{
     io.to(e.to).emit('run code',{...e})
@@ -29,22 +31,28 @@ io.on('connection', (socket) => {
   })
   socket.on('code_changes',(e)=>{
     const {language,value,cb,to}=e;
-    console.log(e);
     io.to(to).emit('code_changes_acceped',{...e})
   })
   socket.on('join Room', (e) => {
-    console.log('join room');
     const socketId = socket.id;
     const rooms = io.sockets.adapter.rooms;
     const roomExists = rooms.get(e.roomId);
-    console.log(socketId);
-    console.log(roomExists)
-    if (roomExists != undefined && roomExists.size==1) {
+    if(map.has(e.roomId) && map.get(e.roomId)!=e.password)
+    {
+      io.to(socketId).emit('invalid password',{message:'The password is incorrect for the roomId'});
+    }
+    else if (roomExists != undefined && roomExists.size==1 && map.get(e.roomId)==e.password) {
+      socket.join(e.roomId);
+      io.to(socketId).emit('valid password',{message:true});
       io.to(e.roomId).emit('user_joined', { userId: socketId });//once when a user logs in he will join room then when other user joins the event is emitted to the room members
     }
+    else if(!map.has(e.roomId))
+    {
     socket.join(e.roomId);//first emit to members of the room and then join so event is not emitted back to login user
     map.set(e.roomId,e.password);
-    console.log('room',roomExists);
+    io.to(socketId).emit('valid password',{message:true});
+    
+    }
   });
   socket.on('send_offer', (e) => {
     console.log('SEND OFFER');
@@ -79,6 +87,7 @@ io.on('connection', (socket) => {
   })
 
   socket.on('close', (e) => {
+    map.delete(e.roomId);
     console.log('Socket disconnected');
   })
 

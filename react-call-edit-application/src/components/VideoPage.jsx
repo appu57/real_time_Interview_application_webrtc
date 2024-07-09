@@ -57,20 +57,20 @@ const VideoPage = () => {
 
     }, [streams]);
     const receiveOffer = useCallback(async (e) => {
+        console.log(e);
         setSelectedUserContext(e.from);
         setRemoteSocket(e.from);//set remote socket id which is created in backend
-
         const streams = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
         setStreams(streams);
         const answer = await PeerService.getAnswer(e.offer);
         socket.emit('send_answer', { to: e.from, answer: answer });
-    }, [socket]);
+    }, [socket,streams]);
 
     const receiveAnswer = useCallback(async (e) => {
-        console.log(e);
+        console.log('answer',e);
         await PeerService.setRemoteDescription(e.answer);
         await sendStreams();
-    }, [sendStreams, socket]);
+    }, [sendStreams]);
 
     const negotiationNeeded = useCallback(async (e) => {
         const { from, offer } = e;
@@ -90,9 +90,7 @@ const VideoPage = () => {
     }, [remoteSocket, socket])
     const LeaveMeeting = () => {
         socket.emit('leave',{roomId:roomId,to:selectedUserContext})
-        if (streams) {
-            streams.getTracks().forEach(track => track.stop());
-        }
+        PeerService.stopSendingTrack();
         PeerService.peer.close();
         setLeaveMeeting(true);
         setStreams(null);
@@ -122,19 +120,18 @@ const VideoPage = () => {
     const addTrack=(e)=>{
         const remoteStream = e.streams;
         setRemoteStreams(remoteStream[0]);
-        console.log(remoteStream);
+        console.log('remote stream',remoteStream);
     }
+
     const closeRemoteSocket=(e)=>{
         setRemoteStreams(null);
+        PeerService.stopSendingTrack();
     }
 
     useEffect(() => {
         if(PeerService.peer)
         {
         PeerService.peer.addEventListener('track',addTrack)
-         return ()=>{
-             PeerService.peer.removeEventListener('track',addTrack);
-         }
         }
     }, [addTrack])
 
@@ -148,10 +145,7 @@ const VideoPage = () => {
     }, [handleNegotiation])
     useEffect(() => {
         if (socket) {
-            if (!PeerService.peer) {
-                PeerService.createConnection();
-            }
-            if (!leaveMeeting ) {
+            if (!leaveMeeting && callUserMedia) {
                 showUserMedia();
                 setCallUserMedia(false);
 
@@ -172,7 +166,7 @@ const VideoPage = () => {
 
             }
         }
-    }, [socket, joinRoom, receiveAnswer, negotiationNeeded, negotiationCompleted, receiveOffer, showUserMedia,closeRemoteSocket])
+    }, [socket, joinRoom, receiveAnswer, negotiationNeeded, negotiationCompleted, receiveOffer, showUserMedia,closeRemoteSocket,callUserMedia,leaveMeeting])
     return (
         <div className="video__page__container">
             <div className="stream__container" style={{ height: "45%" }}>

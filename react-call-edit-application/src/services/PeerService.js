@@ -48,12 +48,10 @@ class PeerService {
         console.log(this.peer)
     }
 
-    leave(){
+    stopSendingTrack(){
         if(this.peer)
         {
-            this.peer.getSenders().forEach(sender=>sender.track.stop());
-            this.peer.close();
-            this.peer=null;
+            this.peer.getSenders().forEach(sender=>this.peer.removeTrack(sender));
         }
     }
 }
